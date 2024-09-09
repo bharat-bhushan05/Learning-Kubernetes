@@ -119,6 +119,4 @@ kubectl explain pods.spec.containers
 ```bash
 kubectl explain deployment --output=plaintext-openapiv2
 ```
-```
 
-This `.md` file provides a well-structured guide for setting up a Kubernetes cluster using `kind`, installing `kubectl`, and running useful `kubectl` commands.
