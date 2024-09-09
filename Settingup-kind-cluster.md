@@ -1,6 +1,3 @@
-
-
-```markdown
 # Kubernetes Cluster Setup Using `kind` and `kubectl`
 
 ## 1. Create Directories
