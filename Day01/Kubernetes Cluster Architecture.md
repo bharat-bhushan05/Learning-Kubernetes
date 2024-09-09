@@ -91,7 +91,7 @@ The **Cluster** is the overarching structure that contains all the master and wo
 
 Below is a more detailed diagram of the Kubernetes architecture:
 
-![Alt text](images/Cluster Architecture.jpg)
+![Alt text](./images/Cluster_Architecture.jpg)
 
 ## Reference
 
