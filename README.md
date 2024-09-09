@@ -1,102 +1,152 @@
-# Kubernetes Architecture Overview
+35-day study plan to help you clear the Certified Kubernetes Administrator (CKA) exam. Each day will focus on a specific topic, ensuring you cover all the necessary areas.
 
-Welcome to the **Kubernetes Architecture** repository! This repository aims to provide a comprehensive overview of the Kubernetes architecture by referencing the official [Kubernetes documentation](https://kubernetes.io/docs/concepts/architecture/). Kubernetes (K8s) is an open-source system for automating the deployment, scaling, and management of containerized applications.
+### Week 1: Introduction & Basic Concepts
+- **Day 1: Kubernetes Overview**
+  - Study Kubernetes architecture, components, and cluster setup.
+  - Read about the control plane and nodes.
+  - Install `kubectl` and set up a basic cluster.
 
-## Introduction
+- **Day 2: Kubernetes Objects - Pods**
+  - Understand Pods, multi-container pods, and their lifecycle.
+  - Practice creating, deleting, and managing pods using YAML and `kubectl`.
 
-Kubernetes clusters consist of a set of worker machines, called **nodes**, that run containerized applications. Every cluster has at least one **master node** and multiple **worker nodes**. The master node is responsible for managing the state of the cluster, while the worker nodes host the actual application workloads.
+- **Day 3: Replication Controllers & ReplicaSets**
+  - Learn about ReplicationControllers and ReplicaSets.
+  - Create and manage ReplicaSets and understand scaling.
 
-This repository highlights the major components of the Kubernetes architecture, including their respective roles and interactions.
+- **Day 4: Deployments**
+  - Focus on Deployments, rollbacks, and updates.
+  - Hands-on: Create a deployment, scale it, and perform a rollback.
 
-## Kubernetes Architecture
+- **Day 5: Services & Networking**
+  - Understand Services (ClusterIP, NodePort, LoadBalancer).
+  - Study DNS in Kubernetes and practice exposing services.
 
-### 1. Master Node
+- **Day 6: Namespaces**
+  - Study the concept of Namespaces in Kubernetes.
+  - Create and manage resources across multiple namespaces.
 
-The **Master Node** manages the cluster and coordinates all activities like scheduling applications, maintaining desired states, scaling, and rolling out new updates. It contains the following core components:
+- **Day 7: Revision Day**
+  - Revise all concepts from Week 1.
+  - Practice working with Pods, ReplicaSets, Deployments, Services, and Namespaces.
 
-- **API Server**: The API server is the front end of the Kubernetes control plane. All the administrative commands are received by the API server, which processes the requests and updates the corresponding objects in the `etcd` store.
+### Week 2: Core Concepts & Configuration
+- **Day 8: ConfigMaps**
+  - Learn about ConfigMaps and their use in managing configuration.
+  - Hands-on: Create ConfigMaps and use them in Pods.
 
-  - **Key Responsibilities**:
-    - Exposes Kubernetes API.
-    - Processes REST requests and provides data to client tools (e.g., `kubectl`).
-    - Serves as the primary interface for all interactions with the control plane.
+- **Day 9: Secrets**
+  - Study Kubernetes Secrets and how to secure sensitive information.
+  - Practice creating Secrets and consuming them in Pods.
 
-- **Scheduler**: The scheduler is responsible for assigning workloads to nodes. It monitors resource usage and schedules newly created pods that do not have a node assigned to them, ensuring they fit within the cluster's resource constraints.
+- **Day 10: Resource Limits & Requests**
+  - Understand resource management, CPU/memory requests, and limits.
+  - Create Pods with resource specifications.
 
-  - **Key Responsibilities**:
-    - Tracks resources available in the cluster.
-    - Assigns pods to worker nodes based on resource availability and other constraints.
+- **Day 11: Node Affinity & Taints**
+  - Learn about node selectors, affinity, anti-affinity, and taints.
+  - Hands-on: Assign Pods to specific nodes based on labels and taints.
 
-- **Controller Manager**: The controller manager ensures the desired state of the cluster matches the actual state. It includes various controllers for handling different parts of the system, such as the node controller, replication controller, and endpoints controller.
+- **Day 12: DaemonSets**
+  - Study DaemonSets and their use cases.
+  - Create and manage DaemonSets to ensure pods are running on all nodes.
 
-  - **Key Responsibilities**:
-    - Runs control loops to manage the state of Kubernetes resources.
-    - Watches for state changes (e.g., replicas, jobs) and makes necessary adjustments.
+- **Day 13: Jobs & CronJobs**
+  - Learn about Jobs and CronJobs in Kubernetes.
+  - Create, schedule, and manage Jobs/CronJobs.
 
-- **etcd**: A consistent and highly available key-value store that holds all the data regarding the cluster's state. It stores information such as the configuration data, cluster state, and node status.
+- **Day 14: Revision Day**
+  - Revise all concepts from Week 2.
+  - Practice ConfigMaps, Secrets, resource limits, affinity, DaemonSets, and Jobs.
 
-  - **Key Responsibilities**:
-    - Stores configuration and status data.
-    - Acts as the source of truth for cluster information.
+### Week 3: Storage & Scheduling
+- **Day 15: Volumes**
+  - Study the types of volumes in Kubernetes.
+  - Hands-on: Use emptyDir, hostPath, and other volume types.
 
-### 2. Worker Nodes
+- **Day 16: Persistent Volumes (PV) & Persistent Volume Claims (PVC)**
+  - Learn about PVs and PVCs.
+  - Create and manage storage with PVs and PVCs.
 
-Worker nodes host and run application workloads in the form of containers, which are encapsulated within **pods**. Each worker node runs the following critical components:
+- **Day 17: StatefulSets**
+  - Study StatefulSets and their applications.
+  - Create a StatefulSet and manage persistent storage.
 
-- **Kubelet**: Kubelet is the agent running on every worker node that ensures that the containers described in `PodSpecs` are running as expected. It communicates with the API server to receive commands and maintains the desired state of the pods.
+- **Day 18: Storage Classes**
+  - Understand StorageClasses and dynamic provisioning.
+  - Hands-on: Create StorageClasses and manage volumes dynamically.
 
-  - **Key Responsibilities**:
-    - Monitors the state of containers in pods.
-    - Ensures that the containers are running and healthy.
+- **Day 19: Scheduler**
+  - Learn about the Kubernetes scheduler, pod priority, and preemption.
+  - Practice manual scheduling using `nodeName` and Scheduler Policy.
 
-- **Kube-proxy**: Kube-proxy is a network proxy that runs on each worker node and maintains the network rules for pod communication. It facilitates the network traffic to pods within or across nodes in the cluster.
+- **Day 20: Helm**
+  - Explore Helm and its use for Kubernetes package management.
+  - Install Helm, create charts, and manage releases.
 
-  - **Key Responsibilities**:
-    - Manages networking rules and service discovery.
-    - Enables communication between services inside and outside the cluster.
+- **Day 21: Revision Day**
+  - Revise storage concepts, StatefulSets, and Helm.
+  - Practice PV, PVC, StatefulSets, Helm charts, and dynamic provisioning.
 
-- **Container Runtime**: The container runtime is responsible for running containers. Kubernetes supports various container runtimes, such as Docker, containerd, and CRI-O.
+### Week 4: Security & Cluster Maintenance
+- **Day 22: Service Accounts & RBAC**
+  - Learn about Service Accounts, Roles, RoleBindings, and ClusterRoleBindings.
+  - Configure RBAC for specific users and service accounts.
 
-  - **Key Responsibilities**:
-    - Pulls and runs containers.
-    - Isolates containers from the underlying operating system and manages container lifecycles.
+- **Day 23: Network Policies**
+  - Study Network Policies and their application for security.
+  - Hands-on: Create and apply Network Policies to control traffic.
 
-### 3. Pods
+- **Day 24: TLS & Certificates**
+  - Learn how TLS and certificates work in Kubernetes.
+  - Configure and manage certificates in a cluster.
 
-**Pods** are the smallest and most basic deployable objects in Kubernetes. A pod represents a single instance of an application or a set of related containers that share storage and network resources. Pods are ephemeral, meaning they can be replaced or recreated by the control plane as needed.
+- **Day 25: API Access & Authentication**
+  - Study API server access and user authentication methods.
+  - Create and manage certificates for secure access to the API server.
 
-- **Key Characteristics**:
-  - Contains one or more containers.
-  - Shares storage volumes and a unique IP address.
-  - Represents a running instance of a containerized application.
+- **Day 26: Cluster Upgrades**
+  - Understand how to perform Kubernetes cluster upgrades.
+  - Practice upgrading a cluster using `kubeadm`.
 
-### 4. Cluster
+- **Day 27: Backups & ETCD**
+  - Study ETCD, backups, and recovery processes.
+  - Perform ETCD snapshots and practice restoring from backups.
 
-The **Cluster** is the overarching structure that contains all the master and worker nodes. It is the physical or virtual machine environment where the Kubernetes control plane and containerized applications run. A Kubernetes cluster can be highly dynamic, with nodes being added or removed based on workload demands.
+- **Day 28: Revision Day**
+  - Revise security concepts, API access, cluster upgrades, and backups.
+  - Practice Service Accounts, RBAC, certificates, Network Policies, and backups.
 
-- **Key Characteristics**:
-  - Can be composed of physical servers, virtual machines, or cloud instances.
-  - Orchestrates the distribution of containers across multiple worker nodes.
-  - Ensures fault tolerance and high availability.
+### Week 5: Troubleshooting & Final Prep
+- **Day 29: Troubleshooting Basics**
+  - Learn how to troubleshoot Kubernetes clusters (nodes, pods, services).
+  - Practice debugging pods, events, and logs.
 
-### 5. Services, Networking, and Storage
+- **Day 30: Node & Network Issues**
+  - Focus on troubleshooting node and network-related issues.
+  - Practice resolving node failures, network policies, and DNS problems.
 
-- **Services**: A Kubernetes Service is an abstraction that defines a logical set of Pods and a policy for accessing them (e.g., through a stable IP address). Services allow decoupling of workloads and external traffic, enabling seamless communication across different components.
+- **Day 31: Application Issues**
+  - Study common application issues (image pull errors, crash loops).
+  - Hands-on: Resolve common pod and deployment issues.
 
-- **Networking**: Kubernetes networking model allows Pods running on different nodes to communicate with each other. Each Pod has a unique IP, and communication between Pods is managed by the network policies defined within the cluster.
+- **Day 32: Monitoring & Logging**
+  - Explore monitoring solutions (Prometheus, Grafana) and logging.
+  - Set up basic monitoring and view logs using `kubectl logs`.
 
-- **Storage**: Kubernetes provides different storage abstractions to allow persistent data storage. Persistent Volumes (PVs) and Persistent Volume Claims (PVCs) enable Pods to retain data even after a container is terminated.
+- **Day 33: Security Troubleshooting**
+  - Learn to troubleshoot security-related issues (RBAC, certificates).
+  - Practice diagnosing API access and permission issues.
 
-## Kubernetes Architecture Diagram
+- **Day 34: Practice Tests**
+  - Take a full-length practice exam.
+  - Identify weak areas and review them in-depth.
 
-Below is a more detailed diagram of the Kubernetes architecture:
-![Alt text](images/Cluster Architecture.jpg)
+- **Day 35: Final Review & Exam Readiness**
+  - Review core concepts, high-level overviews, and key commands.
+  - Relax and ensure your environment is ready for the exam.
 
-## Reference
-
-To dive deeper into Kubernetes architecture, please visit the official [Kubernetes documentation](https://kubernetes.io/docs/concepts/architecture/).
-
-## License
-
-This repository is licensed under the Kubernetes documentation [license](https://kubernetes.io/docs/home/).
-
+### Notes:
+- Use the Kubernetes documentation frequently.
+- Focus on practical hands-on labs and practice exams.
+- Review all `kubectl` commands and work in a real cluster as much as possible.
