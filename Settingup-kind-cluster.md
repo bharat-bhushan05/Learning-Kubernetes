@@ -1,4 +1,4 @@
-During learning, I have used kind cluster setup
+
 
 ```markdown
 # Kubernetes Cluster Setup Using `kind` and `kubectl`
