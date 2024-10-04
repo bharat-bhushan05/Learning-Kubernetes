@@ -63,4 +63,21 @@ However, it's not recommended to run Minikube with root privileges for security 
 
 ---
 
-Let me know if you need further assistance with any of the options!
+## Error02: Unable to pick a default driver. Here is what was considered, in preference order
+```Error: 
+ubuntu@ip-172-31-14-200:~$ minikube start
+* minikube v1.34.0 on Ubuntu 24.04 (xen/amd64)
+* Unable to pick a default driver. Here is what was considered, in preference order:
+  - docker: Not healthy: "docker version --format {{.Server.Os}}-{{.Server.Version}}:{{.Server.Platform.Name}}" exit status 1: permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/version": dial unix /var/run/docker.sock: connect: permission denied
+  - docker: Suggestion: Add your user to the 'docker' group: 'sudo usermod -aG docker $USER && newgrp docker' <https://docs.docker.com/engine/install/linux-postinstall/>
+* Alternatively you could install one of these drivers:
+  - kvm2: Not installed: exec: "virsh": executable file not found in $PATH
+  - podman: Not installed: exec: "podman": executable file not found in $PATH
+  - qemu2: Not installed: exec: "qemu-system-x86_64": executable file not found in $PATH
+  - virtualbox: Not installed: unable to find VBoxManage in $PATH
+
+X Exiting due to DRV_NOT_HEALTHY: Found driver(s) but none were healthy. See above for suggestions how to fix installed drivers.
+
+ubuntu@ip-172-31-14-200:~$ whoami
+ubuntu
+```
