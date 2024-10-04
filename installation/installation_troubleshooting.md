@@ -1,4 +1,5 @@
-```Error
+## Error01: The "docker" driver should not be used with root privileges. If you wish to continue as root, use --force.
+```Error01
 root@ip-172-31-14-200:/# minikube start
 * minikube v1.34.0 on Ubuntu 24.04 (xen/amd64)
 * Automatically selected the docker driver. Other choices: none, ssh
