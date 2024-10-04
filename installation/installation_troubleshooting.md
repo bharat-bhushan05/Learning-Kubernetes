@@ -81,3 +81,58 @@ X Exiting due to DRV_NOT_HEALTHY: Found driver(s) but none were healthy. See abo
 ubuntu@ip-172-31-14-200:~$ whoami
 ubuntu
 ```
+It looks like the issue you're encountering is related to Docker permissions. Even though you're logged in as the `ubuntu` user, this user does not have the correct permissions to access the Docker socket (`/var/run/docker.sock`). Docker commands require either `sudo` privileges or that your user is in the `docker` group.
+
+To resolve this, follow these steps:
+
+### Step 1: Add the User to the `docker` Group
+This will allow your `ubuntu` user to run Docker commands without `sudo`.
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+This command adds your current user (`$USER`, in this case `ubuntu`) to the `docker` group, which gives it permission to interact with Docker.
+
+### Step 2: Apply the Group Changes
+After adding your user to the `docker` group, you need to log out and log back in for the changes to take effect.
+
+1. Log out of the EC2 instance:
+   ```bash
+   exit
+   ```
+
+2. Log back in to the EC2 instance:
+   ```bash
+   ssh -i <your-pem-file>.pem ubuntu@<your-ec2-instance-public-ip>
+   ```
+
+Alternatively, you can use the `newgrp` command to avoid logging out:
+```bash
+newgrp docker
+```
+
+### Step 3: Verify Docker Access
+After logging back in (or using `newgrp`), check that you can run Docker commands without `sudo`:
+
+```bash
+docker ps
+```
+
+If this works without showing any permission errors, you're ready to proceed.
+
+### Step 4: Start Minikube
+Now, try starting Minikube again:
+
+```bash
+minikube start --driver=docker
+```
+
+This should start Minikube without requiring root privileges.
+
+---
+
+
+
+
+
