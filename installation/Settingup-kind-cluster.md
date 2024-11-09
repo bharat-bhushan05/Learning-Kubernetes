@@ -128,7 +128,7 @@ kubectl explain deployment --output=plaintext-openapiv2
 ## Fix
 If you are unable to access the Kubernetes API server when run without `sudo`. This typically happens if the user's `kubectl` configuration does not have the necessary permissions or access to the Kubernetes cluster's API. Here’s how to fix it:
 
-![Alt text](images/Kubectl_Error_while_executing_as_ubuntu.png)
+![Alt text](/images/Kubectl_Error_while_executing_as_ubuntu.png)
 
 1. **Ensure kubeconfig Permissions**:
 
