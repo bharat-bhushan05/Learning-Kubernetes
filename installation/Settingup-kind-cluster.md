@@ -122,11 +122,17 @@ kubectl explain deployment --output=plaintext-openapiv2
 ### KindCluster Security Group Ports on AWS EC2
 ![Alt text](/images/KindCluster-SG.png)
 ---
+### Error: 
+## E1109 08:01:14.111975    4484 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"http://localhost:8080/api?timeout=32s\": dial tcp 127.0.0.1:8080: connect: connection refused"
+
+## Fix
 If you are unable to access the Kubernetes API server when run without `sudo`. This typically happens if the user's `kubectl` configuration does not have the necessary permissions or access to the Kubernetes cluster's API. Here’s how to fix it:
+
+![Alt text](images/Kubectl_Error_while_executing_as_ubuntu.png)
 
 1. **Ensure kubeconfig Permissions**:
 
-   It appears `kubectl` works when you run it with `sudo`, which implies the kubeconfig file might be accessible only to the root user. To allow the non-root user to run `kubectl` commands, copy the kubeconfig file to their home directory and set appropriate permissions:
+It appears `kubectl` works when you run it with `sudo`, which implies the kubeconfig file might be accessible only to the root user. To allow the non-root user to run `kubectl` commands, copy the kubeconfig file to their home directory and set appropriate permissions:
 
    ```bash
    mkdir -p ~/.kube
