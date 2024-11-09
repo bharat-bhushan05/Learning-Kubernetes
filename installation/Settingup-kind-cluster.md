@@ -119,4 +119,6 @@ kubectl explain pods.spec.containers
 ```bash
 kubectl explain deployment --output=plaintext-openapiv2
 ```
+### KindCluster SG
+![Alt text](images/KindCluster-SG.png)
 
