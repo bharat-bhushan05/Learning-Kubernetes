@@ -121,4 +121,30 @@ kubectl explain deployment --output=plaintext-openapiv2
 ```
 ### KindCluster Security Group Ports on AWS EC2
 ![Alt text](/images/KindCluster-SG.png)
+---
+If you are unable to access the Kubernetes API server when run without `sudo`. This typically happens if the user's `kubectl` configuration does not have the necessary permissions or access to the Kubernetes cluster's API. Here’s how to fix it:
 
+1. **Ensure kubeconfig Permissions**:
+
+   It appears `kubectl` works when you run it with `sudo`, which implies the kubeconfig file might be accessible only to the root user. To allow the non-root user to run `kubectl` commands, copy the kubeconfig file to their home directory and set appropriate permissions:
+
+   ```bash
+   mkdir -p ~/.kube
+   sudo cp /root/.kube/config ~/.kube/
+   sudo chown $(id -u):$(id -g) ~/.kube/config
+   ```
+
+   This will set up `kubectl` to use the configuration file as the current user.
+
+2. **Test `kubectl` as Non-root User**:
+
+   After configuring permissions, try running `kubectl get pods` again without `sudo`.
+
+3. **Verify KUBECONFIG Environment Variable** (optional):
+
+   Make sure the `KUBECONFIG` environment variable points to the correct configuration file. You can set it by adding this line to the user’s shell profile (e.g., `.bashrc` or `.zshrc`):
+
+   ```bash
+   export KUBECONFIG=~/.kube/config
+   ```
+This should allow the user to run `kubectl` commands without needing `sudo`.
