@@ -120,5 +120,5 @@ kubectl explain pods.spec.containers
 kubectl explain deployment --output=plaintext-openapiv2
 ```
 ### KindCluster Security Group Ports on AWS EC2
-![Alt text](images/KindCluster-SG.png)
+![Alt text](/images/KindCluster-SG.png)
 
