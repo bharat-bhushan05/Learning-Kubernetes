@@ -69,7 +69,7 @@ nodes:
 ### Creating the Cluster:
 
 ```bash
-kind create cluster --image kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865 --name cka-cluster1 --name cka-cluster2 --config cluster.yaml
+kind create cluster --image kindest/node:v1.31.0@sha256:53df588e04085fd41ae12de0c3fe4c72f7013bba32a20e7325357a1ac94ba865 --name cka-cluster1 --config cluster.yaml
 ```
 
 ### Verify Cluster Contexts:
