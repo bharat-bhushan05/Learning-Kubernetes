@@ -50,8 +50,8 @@ aws configure --profile eks-admin
 ```bash
 eksctl create cluster \
   --name eks-rbac-demo \
-  --version 1.26 \
-  --region us-east-1 \
+  --version 1.31 \
+  --region us-west-2 \
   --nodegroup-name worker-nodes \
   --node-type t3.medium \
   --nodes 2 \
