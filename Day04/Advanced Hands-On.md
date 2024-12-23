@@ -33,6 +33,36 @@ You need to update an application to a new version without downtime. Ensure that
    ```
    Ensure the new Pods are running the updated version.
 
+#### **YAML File for Deployment:**
+Create a file named `deployment.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-deployment
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+```
+
 ---
 
 ### **Scenario 2: Roll Back to a Specific Revision**
@@ -56,6 +86,31 @@ An update broke the application, and you need to roll back to a specific stable 
    ```
    Ensure the Pods are running the stable version.
 
+#### **YAML File for Deployment:**
+Create a file named `deployment.yaml`:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+```
+
 ---
 
 ### **Scenario 3: Scale Based on Traffic**
@@ -77,6 +132,35 @@ Your application experiences a traffic surge, and you need to scale it quickly.
    ```bash
    kubectl get hpa
    ```
+
+#### **YAML File for Horizontal Pod Autoscaler:**
+Create a file named `hpa.yaml`:
+
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: my-app-deployment
+  minReplicas: 3
+  maxReplicas: 15
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+```
+
+Apply the HPA:
+```bash
+kubectl apply -f hpa.yaml
+```
 
 ---
 
