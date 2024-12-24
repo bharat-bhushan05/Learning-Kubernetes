@@ -214,7 +214,7 @@ metadata:
   name: cluster-pod-reader-binding
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: pod-reader-sa
   namespace: rbac-demo
 roleRef:
   kind: ClusterRole
@@ -233,10 +233,43 @@ Verify the ClusterRoleBinding:
 ```bash
 kubectl get clusterrolebinding cluster-pod-reader-binding
 ```
+---
+### **Step 9: Validate Permissions Using `kubectl auth can-i`**
+To check if the `pod-reader-sa` service account has the correct permissions from the `ClusterRole`, impersonate the service account and test the permissions for accessing `pods` across all namespaces:
+
+```bash
+kubectl auth can-i get pods --as=system:serviceaccount:rbac-demo:pod-reader-sa
+```
+
+If the `ClusterRole` is correctly bound and the permissions are applied, this should return `yes`.
+
+## **Test Cluster-Wide Access for ClusterRole**
+Test if the `pod-reader-sa` service account can access pods across the entire cluster, not just in the `rbac-demo` namespace, by impersonating the service account:
+
+```bash
+kubectl auth can-i get pods --as=system:serviceaccount:rbac-demo:pod-reader-sa --all-namespaces
+```
+
+Expected output:
+
+```bash
+yes
+```
+
+This verifies that the `ClusterRole` provides cluster-wide access as expected.
+
+## ** Check the Permissions of the `someuser`**
+Since `someuser` doesn't have a `ClusterRoleBinding` or specific roles assigned, the result for `someuser` should still be `no`:
+
+```bash
+kubectl auth can-i get pods --as=someuser --all-namespaces
+```
+
+This should return `no` unless `someuser` is explicitly granted permissions.
 
 ---
 
-#### **Step 9: Clean-Up**
+#### **Step 10: Clean-Up**
 
 Finally, clean up all the resources you’ve created during the exercise.
 
@@ -254,10 +287,4 @@ kubectl delete serviceaccount pod-reader-sa -n rbac-demo
 ### **Conclusion**
 
 In this hands-on lab, you've learned how to create and manage Kubernetes RBAC configurations, including roles, role bindings, cluster roles, and cluster role bindings. You've also tested RBAC permissions using service accounts and user impersonation.
-
 ---
-
-### **Add Comments and Tips**
-
-Make sure to provide detailed feedback and tips along with each step in your KillerCoda setup. This will help users understand the concepts clearly as they progress through the exercise. 
-
