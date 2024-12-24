@@ -258,7 +258,7 @@ yes
 
 This verifies that the `ClusterRole` provides cluster-wide access as expected.
 
-## ** Check the Permissions of the `someuser`**
+## **Check the Permissions of the `someuser`**
 Since `someuser` doesn't have a `ClusterRoleBinding` or specific roles assigned, the result for `someuser` should still be `no`:
 
 ```bash
