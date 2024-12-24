@@ -285,6 +285,6 @@ kubectl delete serviceaccount pod-reader-sa -n rbac-demo
 ---
 
 ### **Conclusion**
-
+-
 In this hands-on lab, you've learned how to create and manage Kubernetes RBAC configurations, including roles, role bindings, cluster roles, and cluster role bindings. You've also tested RBAC permissions using service accounts and user impersonation.
 ---
