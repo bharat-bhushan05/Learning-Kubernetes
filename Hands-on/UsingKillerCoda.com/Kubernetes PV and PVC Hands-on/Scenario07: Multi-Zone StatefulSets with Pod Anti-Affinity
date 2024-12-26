@@ -1,0 +1,171 @@
+### **Scenario 7: Multi-Zone StatefulSets with Pod Anti-Affinity**  
+
+In production, deploying stateful applications across multiple availability zones (AZs) ensures high availability and fault tolerance. This scenario focuses on deploying a StatefulSet across multiple zones using pod anti-affinity rules to prevent pods from running on the same node or AZ.  
+
+---
+
+### **Objective:**  
+- Deploy a StatefulSet with pods distributed across AZs.  
+- Implement pod anti-affinity to ensure no two pods run on the same node.  
+- Use node selectors and topology spread constraints for zone-based distribution.  
+
+---
+
+## **Step 1: Label Nodes by Availability Zone**  
+
+```bash
+kubectl get nodes --show-labels
+```  
+- Add custom labels if nodes do not have `topology.kubernetes.io/zone` labels.  
+
+```bash
+kubectl label nodes <node1> topology.kubernetes.io/zone=zone-a
+kubectl label nodes <node2> topology.kubernetes.io/zone=zone-b
+kubectl label nodes <node3> topology.kubernetes.io/zone=zone-c
+```  
+- Verify:  
+```bash
+kubectl get nodes --show-labels | grep topology
+```  
+
+---
+
+## **Step 2: Create a Multi-Zone StatefulSet**  
+
+### **Manifest (multi-zone-statefulset.yaml):**  
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: multi-zone-app
+spec:
+  replicas: 3
+  serviceName: multi-zone-svc
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+        - name: nginx
+          image: nginx
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/nginx/html
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: myapp
+              topologyKey: topology.kubernetes.io/zone
+      tolerations:
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 600
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: 
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: multi-zone-sc
+```  
+
+---
+
+### **Explanation of Fields:**  
+- **podAntiAffinity** – Prevents pods from being scheduled on the same AZ (keyed by `topology.kubernetes.io/zone`).  
+- **topologyKey** – Ensures pod distribution across zones.  
+- **volumeClaimTemplates** – Each pod gets its own persistent volume.  
+- **tolerations** – Handles node failures by allowing pods to stay for 10 minutes before eviction.  
+
+---
+
+## **Step 3: Create StorageClass for Multi-Zone Volumes**  
+
+### **Manifest (multi-zone-storageclass.yaml):**  
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: multi-zone-sc
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp3
+  zones: zone-a,zone-b,zone-c
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+```  
+
+---
+
+### **Apply StorageClass and StatefulSet:**  
+```bash
+kubectl apply -f multi-zone-storageclass.yaml
+kubectl apply -f multi-zone-statefulset.yaml
+```  
+- Verify pod distribution:  
+```bash
+kubectl get pods -o wide
+```  
+- Pods (`multi-zone-app-0`, `multi-zone-app-1`, `multi-zone-app-2`) should be spread across zones.  
+
+---
+
+## **Step 4: Verify Pod Anti-Affinity and Zonal Distribution**  
+
+```bash
+kubectl describe pod multi-zone-app-0 | grep -i node
+kubectl describe pod multi-zone-app-1 | grep -i node
+kubectl describe pod multi-zone-app-2 | grep -i node
+```  
+- Each pod should be scheduled on nodes from different zones.  
+
+---
+
+## **Step 5: Simulate Node Failure**  
+
+```bash
+kubectl drain <node-name> --ignore-daemonsets
+kubectl get pods
+```  
+- Pods from the drained node will reschedule to other available zones, maintaining the anti-affinity rule.  
+
+---
+
+## **Step 6: Scale StatefulSet**  
+
+```bash
+kubectl scale statefulset multi-zone-app --replicas=5
+kubectl get pods -o wide
+```  
+- Additional pods will continue to distribute across zones.  
+
+---
+
+## **Step 7: Clean Up (Optional)**  
+
+```bash
+kubectl delete statefulset multi-zone-app
+kubectl delete storageclass multi-zone-sc
+kubectl label nodes <node1> topology.kubernetes.io/zone-
+kubectl label nodes <node2> topology.kubernetes.io/zone-
+```  
+
+---
+
+## **Key Takeaways from This Hands-on:**  
+- **Anti-Affinity** ensures fault tolerance by distributing pods across zones.  
+- **StatefulSets** preserve pod identity while enabling high availability.  
+- **StorageClass zoning** provisions volumes in specific AZs.  
+
+---
