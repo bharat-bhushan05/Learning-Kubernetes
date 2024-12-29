@@ -1,6 +1,6 @@
 ### **Resource Requests and Limits – Fine-Tuning Pod Resource Management (Real-World CKA Hands-On)**  
 
----
+
 
 ### **Concept Overview**  
 In Kubernetes, **resource requests and limits** ensure:  
@@ -13,22 +13,22 @@ In Kubernetes, **resource requests and limits** ensure:
 - **Limits** – Maximum resources a container can consume.  
 - If a pod exceeds its limit, it may be **throttled (CPU)** or **killed (memory)**.  
 
----
 
----
+
+
 
 ### **Real-World Scenario**  
 A critical service (`payment-service`) experiences memory spikes during peak traffic. You need to:  
 1. Guarantee **500m (0.5 CPU) and 256Mi memory** at all times.  
 2. Cap usage at **1 CPU and 512Mi memory** to prevent cluster instability.  
 
----
 
----
+
+
 
 ## **Hands-On 7: Implement Resource Requests and Limits**  
 
----
+
 
 ### **Step 1: Create Resource-Limited Pod**  
 
@@ -52,9 +52,9 @@ spec:
         memory: "512Mi"
 ```
 
----
 
----
+
+
 
 ### **Explanation**  
 - **Request:** Guarantees **0.5 CPU** and **256Mi memory**.  
@@ -62,9 +62,9 @@ spec:
 
 If the pod tries to exceed 512Mi of memory, it will **terminate with an OOMKilled status**.  
 
----
 
----
+
+
 
 ### **Step 2: Apply and Verify**  
 
@@ -74,9 +74,9 @@ kubectl describe pod payment-service
 ```
 - Check the **resource section** in the pod description.  
 
----
 
----
+
+
 
 ### **Step 3: Simulate Memory Spike (Stress Test)**  
 
@@ -94,9 +94,9 @@ kubectl get pods
 ```
 - Observe the **OOMKilled** status.  
 
----
 
----
+
+
 
 ### **Challenge – Fix OOMKilled Issue**  
 1. **Edit the Pod to Increase Memory Limit**:  
@@ -110,9 +110,9 @@ kubectl get pods
      ```  
 2. **Reapply and Re-Test Memory Spike.**  
 
----
 
----
+
+
 
 ### **Advanced Task – Enforce Default Resource Quotas**  
 - Apply a **ResourceQuota** to the `default` namespace to limit total resource consumption by all pods.  
