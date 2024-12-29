@@ -1,4 +1,4 @@
-Here's a revised hands-on exercise for practicing **Kubernetes Persistent Volumes (PV) and Persistent Volume Claims (PVC)**. This version introduces more variety, including dynamic provisioning, expanding PVC size, and simulating pod failure recovery.  
+Hands-on exercise for practicing **Kubernetes Persistent Volumes (PV) and Persistent Volume Claims (PVC)**. This version introduces more variety, including dynamic provisioning, expanding PVC size, and simulating pod failure recovery.  
 
 ---
 
