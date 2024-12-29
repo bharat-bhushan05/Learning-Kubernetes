@@ -242,4 +242,196 @@ kubectl get pods
 - Configuring services to expose applications  
 - Installing and configuring NGINX Ingress Controller  
 - Creating Ingress rules for path-based routing  
-- Testing and troubleshooting Ingress  
+- Testing and troubleshooting Ingress
+
+
+---
+
+## **Part 8: Advanced Ingress Configuration**
+
+### **1. Rate Limiting with NGINX Ingress Controller**
+
+You can use annotations to configure rate limiting on your services. This can help protect your services from being overwhelmed by too many requests in a short period.
+
+#### **Steps to enable Rate Limiting**:
+
+1. **Modify your Ingress YAML** to include rate limiting annotations:
+```yaml
+# ingress-rate-limiting.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/limit-concurrency: "1" # Limit the concurrency
+    nginx.ingress.kubernetes.io/limit-rps: "5" # Max 5 requests per second
+    nginx.ingress.kubernetes.io/limit-burst: "10" # Allow burst of up to 10 requests
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: killercoda.local
+    http:
+      paths:
+      - path: /app1
+        pathType: Prefix
+        backend:
+          service:
+            name: app1-service
+            port:
+              number: 80
+      - path: /app2
+        pathType: Prefix
+        backend:
+          service:
+            name: app2-service
+            port:
+              number: 80
+```
+
+2. **Apply the changes**:
+```bash
+kubectl apply -f ingress-rate-limiting.yaml
+```
+
+3. **Test the rate limiting**:  
+You can use `curl` or any HTTP client to test the rate limiting. Make rapid requests and observe the behavior.
+
+```bash
+# Test with rapid requests
+for i in {1..20}; do curl -s http://killercoda.local/app1; done
+```
+
+You should see some requests being rate-limited.
+
+---
+
+### **2. Custom Error Pages with NGINX Ingress**
+
+Custom error pages allow you to display a user-friendly page instead of default error messages for common HTTP status codes (like 404 or 500).
+
+#### **Steps to configure Custom Error Pages**:
+
+1. **Create a custom error page** (e.g., an HTML page with a message).  
+Upload this error page to your Kubernetes cluster or host it on an external server.
+
+2. **Update the Ingress YAML** to include error page annotations:
+```yaml
+# ingress-with-error-pages.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/custom-http-errors: "404,500"
+    nginx.ingress.kubernetes.io/custom-error-page-404: "http://my-external-error-page.com/404.html"
+    nginx.ingress.kubernetes.io/custom-error-page-500: "http://my-external-error-page.com/500.html"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: killercoda.local
+    http:
+      paths:
+      - path: /app1
+        pathType: Prefix
+        backend:
+          service:
+            name: app1-service
+            port:
+              number: 80
+```
+
+3. **Apply the changes**:
+```bash
+kubectl apply -f ingress-with-error-pages.yaml
+```
+
+4. **Test the custom error page**:  
+To trigger an error, you can request an invalid path or test the application with downtime.
+```bash
+curl http://killercoda.local/invalid-path
+```
+You should see your custom 404 error page.
+
+---
+
+### **3. JWT Authentication with NGINX Ingress Controller**
+
+JWT (JSON Web Tokens) can be used to secure access to your services. With NGINX Ingress Controller, you can set up JWT authentication for your Ingress resources to only allow authorized users to access the application.
+
+#### **Steps to configure JWT authentication**:
+
+1. **Create a Secret for JWT Configuration** (e.g., public key or shared secret).
+
+   For this demo, assume we are using a shared secret for JWT verification:
+```bash
+kubectl create secret generic jwt-secret --from-literal=jwt-secret="my-jwt-secret-key"
+```
+
+2. **Update your Ingress YAML to include JWT Authentication annotations**:
+```yaml
+# ingress-jwt-auth.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/auth-url: "http://nginx-ingress-controller.com/authenticate"
+    nginx.ingress.kubernetes.io/auth-signin: "https://your-auth-server.com/oauth2/authorize?redirect_uri=https://killercoda.local/app1"
+    nginx.ingress.kubernetes.io/auth-response-headers: "Authorization"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: killercoda.local
+    http:
+      paths:
+      - path: /app1
+        pathType: Prefix
+        backend:
+          service:
+            name: app1-service
+            port:
+              number: 80
+```
+
+3. **Apply the changes**:
+```bash
+kubectl apply -f ingress-jwt-auth.yaml
+```
+
+4. **Test JWT Authentication**:  
+To test JWT authentication, ensure you have a valid token and then try accessing the service:
+```bash
+curl -H "Authorization: Bearer <your-jwt-token>" http://killercoda.local/app1
+```
+You should be able to access the service if the JWT is valid; otherwise, the request will be denied.
+
+---
+
+## **Summary of Annotations**:
+
+- **Rate Limiting**:
+  - `nginx.ingress.kubernetes.io/limit-concurrency`: Limits the number of simultaneous connections.
+  - `nginx.ingress.kubernetes.io/limit-rps`: Limits the number of requests per second.
+  - `nginx.ingress.kubernetes.io/limit-burst`: Allows a burst of requests beyond the rate limit.
+
+- **Custom Error Pages**:
+  - `nginx.ingress.kubernetes.io/custom-http-errors`: Defines which error codes should trigger custom pages.
+  - `nginx.ingress.kubernetes.io/custom-error-page-<code>`: URL for the custom error page.
+
+- **JWT Authentication**:
+  - `nginx.ingress.kubernetes.io/auth-url`: The URL where the JWT can be validated.
+  - `nginx.ingress.kubernetes.io/auth-signin`: URL for redirecting unauthenticated users.
+  - `nginx.ingress.kubernetes.io/auth-response-headers`: Specifies which headers to return from the authentication service.
+
+---
+
+### **Conclusion**
+
+These advanced NGINX Ingress Controller features allow you to:
+- Apply rate limiting to prevent abuse of your services.
+- Serve custom error pages to enhance user experience.
+- Secure your services with JWT authentication.
+
