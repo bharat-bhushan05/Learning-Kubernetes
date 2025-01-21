@@ -1,0 +1,675 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: asia
+  namespace: world
+spec:
+  selector:
+    app: asia
+  ports:
+    - protocol: TCP
+      port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: europe
+  namespace: world
+spec:
+  type: ClusterIP
+  selector:
+    app: europe
+  ports:
+    - protocol: TCP
+      port: 80
+	  
+=================================Ingress Create =========================================================
+There are two existing Deployments in Namespace world which should be made accessible via an Ingress.
+
+First: create ClusterIP Services for both Deployments for port 80 . The Services should have the same name as the Deployments.
+
+
+Tip
+
+k expose deploy -h
+
+Solution
+
+k -n world expose deploy europe --port 80
+k -n world expose deploy asia --port 80
+===================================================Solution===========================================================
+controlplane $ kubectl get all -A
+NAMESPACE            NAME                                            READY   STATUS      RESTARTS      AGE
+ingress-nginx        pod/ingress-nginx-admission-create-hvdbw        0/1     Completed   0             13m
+ingress-nginx        pod/ingress-nginx-admission-patch-5fdj4         0/1     Completed   0             13m
+ingress-nginx        pod/ingress-nginx-controller-554f44dcc8-zdbgm   1/1     Running     0             13m
+kube-system          pod/calico-kube-controllers-94fb6bc47-4wx95     1/1     Running     1 (24m ago)   19d
+kube-system          pod/canal-b9w57                                 2/2     Running     2 (24m ago)   19d
+kube-system          pod/coredns-57888bfdc7-g2dbp                    1/1     Running     1 (24m ago)   19d
+kube-system          pod/coredns-57888bfdc7-nms5t                    1/1     Running     1 (24m ago)   19d
+kube-system          pod/etcd-controlplane                           1/1     Running     1 (24m ago)   19d
+kube-system          pod/kube-apiserver-controlplane                 1/1     Running     1 (24m ago)   19d
+kube-system          pod/kube-controller-manager-controlplane        1/1     Running     1 (24m ago)   19d
+kube-system          pod/kube-proxy-sqc72                            1/1     Running     1 (24m ago)   19d
+kube-system          pod/kube-scheduler-controlplane                 1/1     Running     1 (24m ago)   19d
+local-path-storage   pod/local-path-provisioner-6c5cff8948-tmf26     1/1     Running     1 (24m ago)   19d
+world                pod/asia-7459456b74-f87kh                       1/1     Running     0             13m
+world                pod/asia-7459456b74-gwn5n                       1/1     Running     0             13m
+world                pod/europe-7cd5f59c46-qth4t                     1/1     Running     0             13m
+world                pod/europe-7cd5f59c46-rgwjd                     1/1     Running     0             13m
+
+NAMESPACE       NAME                                         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+default         service/kubernetes                           ClusterIP   10.96.0.1        <none>        443/TCP                      19d
+ingress-nginx   service/ingress-nginx-controller             NodePort    10.102.112.150   <none>        80:30080/TCP,443:30443/TCP   13m
+ingress-nginx   service/ingress-nginx-controller-admission   ClusterIP   10.102.236.52    <none>        443/TCP                      13m
+kube-system     service/kube-dns                             ClusterIP   10.96.0.10       <none>        53/UDP,53/TCP,9153/TCP       19d
+world           service/asia                                 ClusterIP   10.109.17.0      <none>        80/TCP                       6m57s
+world           service/europe                               ClusterIP   10.111.11.20     <none>        80/TCP                       4m50s
+
+NAMESPACE     NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kube-system   daemonset.apps/canal        1         1         1       1            1           kubernetes.io/os=linux   19d
+kube-system   daemonset.apps/kube-proxy   1         1         1       1            1           kubernetes.io/os=linux   19d
+
+NAMESPACE            NAME                                       READY   UP-TO-DATE   AVAILABLE   AGE
+ingress-nginx        deployment.apps/ingress-nginx-controller   1/1     1            1           13m
+kube-system          deployment.apps/calico-kube-controllers    1/1     1            1           19d
+kube-system          deployment.apps/coredns                    2/2     2            2           19d
+local-path-storage   deployment.apps/local-path-provisioner     1/1     1            1           19d
+world                deployment.apps/asia                       2/2     2            2           13m
+world                deployment.apps/europe                     2/2     2            2           13m
+
+NAMESPACE            NAME                                                  DESIRED   CURRENT   READY   AGE
+ingress-nginx        replicaset.apps/ingress-nginx-controller-554f44dcc8   1         1         1       13m
+kube-system          replicaset.apps/calico-kube-controllers-94fb6bc47     1         1         1       19d
+kube-system          replicaset.apps/coredns-57888bfdc7                    2         2         2       19d
+kube-system          replicaset.apps/coredns-6f6b679f8f                    0         0         0       19d
+local-path-storage   replicaset.apps/local-path-provisioner-6c5cff8948     1         1         1       19d
+world                replicaset.apps/asia-7459456b74                       2         2         2       13m
+world                replicaset.apps/europe-7cd5f59c46                     2         2         2       13m
+
+NAMESPACE       NAME                                       STATUS     COMPLETIONS   DURATION   AGE
+ingress-nginx   job.batch/ingress-nginx-admission-create   Complete   1/1           12s        13m
+ingress-nginx   job.batch/ingress-nginx-admission-patch    Complete   1/1           13s        13m
+
+controlplane $ curl http://world.universe.mine:30080/europe/
+<html>
+<head><title>503 Service Temporarily Unavailable</title></head>
+<body>
+<center><h1>503 Service Temporarily Unavailable</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+controlplane $ curl http://world.universe.mine:30080/asia/
+<html>
+<head><title>503 Service Temporarily Unavailable</title></head>
+<body>
+<center><h1>503 Service Temporarily Unavailable</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+controlplane $ ^C
+controlplane $ kubectl -n world get svc
+NAME     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+asia     ClusterIP   10.109.17.0    <none>        80/TCP    13m
+europe   ClusterIP   10.111.11.20   <none>        80/TCP    11m
+controlplane $ kubectl -n world get pods
+NAME                      READY   STATUS    RESTARTS   AGE
+asia-7459456b74-f87kh     1/1     Running   0          20m
+asia-7459456b74-gwn5n     1/1     Running   0          20m
+europe-7cd5f59c46-qth4t   1/1     Running   0          20m
+europe-7cd5f59c46-rgwjd   1/1     Running   0          20m
+controlplane $ kubectl -n world deployment     
+Error: flags cannot be placed before plugin name: -n
+controlplane $ kubectl -n world deployments 
+Error: flags cannot be placed before plugin name: -n
+controlplane $ kubectl -n world get deployments
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+asia     2/2     2            2           21m
+europe   2/2     2            2           21m
+controlplane $ ^C
+controlplane $ ^C
+controlplane $ kubectl describe deployment/asia
+Error from server (NotFound): deployments.apps "asia" not found
+controlplane $ kubectl describe deployment/asia -n world
+Name:                   asia
+Namespace:              world
+CreationTimestamp:      Tue, 21 Jan 2025 16:43:25 +0000
+Labels:                 app=asia
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=asia
+Replicas:               2 desired | 2 updated | 2 total | 2 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=asia
+  Init Containers:
+   init-container:
+    Image:      busybox:1.28
+    Port:       <none>
+    Host Port:  <none>
+    Command:
+      sh
+      -c
+      echo 'hello, you reached ASIA' > /html/index.html
+    Environment:  <none>
+    Mounts:
+      /html from html (rw)
+  Containers:
+   c:
+    Image:        nginx:1.21.5-alpine
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:
+      /etc/nginx from nginx-conf (ro)
+      /usr/share/nginx/html from html (rw)
+  Volumes:
+   html:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  <unset>
+   nginx-conf:
+    Type:          ConfigMap (a volume populated by a ConfigMap)
+    Name:          nginx-conf
+    Optional:      false
+  Node-Selectors:  <none>
+  Tolerations:     <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   asia-7459456b74 (2/2 replicas created)
+Events:
+  Type    Reason             Age   From                   Message
+  ----    ------             ----  ----                   -------
+  Normal  ScalingReplicaSet  22m   deployment-controller  Scaled up replica set asia-7459456b74 to 2
+controlplane $ kubectl describe deployment/asia -n world -o yaml
+error: unknown shorthand flag: 'o' in -o
+See 'kubectl describe --help' for usage.
+controlplane $ kubectl get deployment/asia -n world -o yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2025-01-21T16:43:25Z"
+  generation: 1
+  labels:
+    app: asia
+  name: asia
+  namespace: world
+  resourceVersion: "2265"
+  uid: ac80afc8-29ef-49f7-a986-cd70f0d662d6
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: asia
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: asia
+    spec:
+      containers:
+      - image: nginx:1.21.5-alpine
+        imagePullPolicy: IfNotPresent
+        name: c
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: html
+        - mountPath: /etc/nginx
+          name: nginx-conf
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - echo 'hello, you reached ASIA' > /html/index.html
+        image: busybox:1.28
+        imagePullPolicy: IfNotPresent
+        name: init-container
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /html
+          name: html
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: html
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: nginx.conf
+            path: nginx.conf
+          name: nginx-conf
+        name: nginx-conf
+status:
+  availableReplicas: 2
+  conditions:
+  - lastTransitionTime: "2025-01-21T16:43:43Z"
+    lastUpdateTime: "2025-01-21T16:43:43Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2025-01-21T16:43:25Z"
+    lastUpdateTime: "2025-01-21T16:43:43Z"
+    message: ReplicaSet "asia-7459456b74" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 2
+  replicas: 2
+  updatedReplicas: 2
+
+controlplane $ kubectl get svc/asia -n world -o yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"asia","namespace":"world"},"spec":{"ports":[{"port":80,"protocol":"TCP"}],"selector":{"app.kubernetes.io/name":"asia"}}}
+  creationTimestamp: "2025-01-21T16:50:10Z"
+  name: asia
+  namespace: world
+  resourceVersion: "2851"
+  uid: df29e1a6-484a-4963-8258-3542595f1a9a
+spec:
+  clusterIP: 10.109.17.0
+  clusterIPs:
+  - 10.109.17.0
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app.kubernetes.io/name: asia
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+controlplane $ ^C
+controlplane $ kubectl -n world describe svc asia
+Name:                     asia
+Namespace:                world
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app.kubernetes.io/name=asia
+Type:                     ClusterIP
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.109.17.0
+IPs:                      10.109.17.0
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+Endpoints:                
+Session Affinity:         None
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+controlplane $ kubectl -n world describe ingress world
+Name:             world
+Labels:           <none>
+Namespace:        world
+Address:          172.30.1.2
+Ingress Class:    nginx
+Default backend:  <default>
+Rules:
+  Host                 Path  Backends
+  ----                 ----  --------
+  world.universe.mine  
+                       /europe   europe:80 ()
+                       /asia     asia:80 ()
+Annotations:           <none>
+Events:
+  Type    Reason  Age                   From                      Message
+  ----    ------  ----                  ----                      -------
+  Normal  Sync    7m51s (x2 over 8m6s)  nginx-ingress-controller  Scheduled for sync
+controlplane $ ^C
+controlplane $ kubectl -n world edit svc asia
+service/asia edited
+controlplane $ kubectl -n world edit svc europe
+Edit cancelled, no changes made.
+controlplane $ kubectl -n world edit svc europe
+service/europe edited
+controlplane $ kubectl -n world describe svc asia
+Name:                     asia
+Namespace:                world
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app=asia
+Type:                     ClusterIP
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.109.17.0
+IPs:                      10.109.17.0
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+Endpoints:                192.168.0.7:80,192.168.0.8:80
+Session Affinity:         None
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+controlplane $ curl http://world.universe.mine:30080/asia/
+hello, you reached ASIA
+controlplane $ curl http://world.universe.mine:30080/europe/
+hello, you reached EUROPE
+controlplane $ 
+
+================================Secure an Ingress with a TLS certificate=======================================
+Make sure to have solved the previous Scenario Ingress Create.
+
+The Nginx Ingress Controller has been installed and an Ingress resource configured in Namespace world .
+You can reach the application using
+	curl http://world.universe.mine:30080/europe
+
+Generate a new TLS certificate using:
+	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.crt -subj "/CN=world.universe.mine/O=world.universe.mine"
+
+Configure the Ingress to use the new certificate, so that you can call
+	curl -kv https://world.universe.mine:30443/europe
+
+The curl verbose output should show the new certificate being used instead of the default Ingress one.
+Tip
+====
+First create a Secret using 
+	k -n world create secret tls -h
+Then make the Ingress resource use it: 
+	k -n world edit ing world
+
+Solution
+=========
+First we generate the crt and key
+	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.crt -subj "/CN=world.universe.mine/O=world.universe.mine"
+Then we create a Secret from the generated files
+	kubectl -n world create secret tls ingress-tls --key cert.key --cert cert.crt
+And finally we can make the Ingress use it
+	k -n world edit ing world
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: world
+  namespace: world
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  ingressClassName: nginx
+  tls:                            # add
+  - hosts:                        # add
+    - world.universe.mine         # add
+    secretName: ingress-tls       # add
+  rules:
+  - host: "world.universe.mine"
+    http:
+      paths:
+      - path: /europe
+        pathType: Prefix
+        backend:
+          service:
+            name: europe
+            port:
+              number: 80
+      - path: /asia
+        pathType: Prefix
+        backend:
+          service:
+            name: asia
+            port:
+              number: 80
+
+Verify
+=========
+	curl -m1 -kvI https://world.universe.mine:30443/europe 2>&1 | grep subject | grep world.universe.mine
+
+
+========================================Solution==============================================================
+ontrolplane $ curl http://world.universe.mine:30080/europe
+hello, you reached EUROPE
+controlplane $ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.crt -subj "/CN=world.universe.mine/O=world.universe.mine"
+Generating a RSA private key
+.....+++++
+......................................+++++
+writing new private key to 'cert.key'
+-----
+controlplane $ curl -kv https://world.universe.mine:30443/europe
+*   Trying 172.30.1.2:30443...
+* TCP_NODELAY set
+* Connected to world.universe.mine (172.30.1.2) port 30443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+*   CAfile: /etc/ssl/certs/ca-certificates.crt
+  CApath: /etc/ssl/certs
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* ALPN, server accepted to use h2
+* Server certificate:
+*  subject: O=Acme Co; CN=Kubernetes Ingress Controller Fake Certificate
+*  start date: Jan 21 17:13:13 2025 GMT
+*  expire date: Jan 21 17:13:13 2026 GMT
+*  issuer: O=Acme Co; CN=Kubernetes Ingress Controller Fake Certificate
+*  SSL certificate verify result: unable to get local issuer certificate (20), continuing anyway.
+* Using HTTP2, server supports multi-use
+* Connection state changed (HTTP/2 confirmed)
+* Copying HTTP/2 data in stream buffer to connection buffer after upgrade: len=0
+* Using Stream ID: 1 (easy handle 0x559564167570)
+> GET /europe HTTP/2
+> Host: world.universe.mine:30443
+> user-agent: curl/7.68.0
+> accept: */*
+> 
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* old SSL session ID is stale, removing
+* Connection state changed (MAX_CONCURRENT_STREAMS == 128)!
+< HTTP/2 200 
+< date: Tue, 21 Jan 2025 17:14:21 GMT
+< content-type: text/html
+< content-length: 26
+< last-modified: Tue, 21 Jan 2025 17:12:52 GMT
+< etag: "678fd594-1a"
+< accept-ranges: bytes
+< strict-transport-security: max-age=15724800; includeSubDomains
+< 
+hello, you reached EUROPE
+* Connection #0 to host world.universe.mine left intact
+controlplane $ curl -m1 -kvI https://world.universe.mine:30443/europe 2>&1 | grep subject | grep world.universe.mine
+controlplane $ ls
+cert.crt  cert.key  filesystem  snap
+controlplane $ kubectl -n world create secret tls ingress-tls --key cert.key --cert cert.crt
+secret/ingress-tls created
+controlplane $ k -n world edit ing world
+ingress.networking.k8s.io/world edited
+controlplane $ curl -m1 -kvI https://world.universe.mine:30443/europe 2>&1 | grep subject | grep world.universe.mine
+*  subject: CN=world.universe.mine; O=world.universe.mine
+controlplane $ curl -kv https://world.universe.mine:30443/europe
+*   Trying 172.30.1.2:30443...
+* TCP_NODELAY set
+* Connected to world.universe.mine (172.30.1.2) port 30443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+* successfully set certificate verify locations:
+*   CAfile: /etc/ssl/certs/ca-certificates.crt
+  CApath: /etc/ssl/certs
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+* ALPN, server accepted to use h2
+* Server certificate:
+*  subject: CN=world.universe.mine; O=world.universe.mine   <<=================================================
+*  start date: Jan 21 17:13:49 2025 GMT
+*  expire date: Jan 21 17:13:49 2026 GMT
+*  issuer: CN=world.universe.mine; O=world.universe.mine
+*  SSL certificate verify result: self signed certificate (18), continuing anyway.
+* Using HTTP2, server supports multi-use
+* Connection state changed (HTTP/2 confirmed)
+* Copying HTTP/2 data in stream buffer to connection buffer after upgrade: len=0
+* Using Stream ID: 1 (easy handle 0x561537b9b570)
+> GET /europe HTTP/2
+> Host: world.universe.mine:30443
+> user-agent: curl/7.68.0
+> accept: */*
+> 
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* old SSL session ID is stale, removing
+* Connection state changed (MAX_CONCURRENT_STREAMS == 128)!
+< HTTP/2 200 
+< date: Tue, 21 Jan 2025 17:18:22 GMT
+< content-type: text/html
+< content-length: 26
+< last-modified: Tue, 21 Jan 2025 17:12:52 GMT
+< etag: "678fd594-1a"
+< accept-ranges: bytes
+< strict-transport-security: max-age=15724800; includeSubDomains
+< 
+hello, you reached EUROPE
+* Connection #0 to host world.universe.mine left intact
+controlplane $
+controlplane $ kubectl get ingress -n world
+NAME    CLASS   HOSTS                 ADDRESS      PORTS     AGE
+world   nginx   world.universe.mine   172.30.1.2   80, 443   7m17s
+controlplane $ kubectl get ingress -n world -o yaml
+apiVersion: v1
+items:
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/rewrite-target: /$1
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    creationTimestamp: "2025-01-21T17:12:45Z"
+    generation: 2
+    name: world
+    namespace: world
+    resourceVersion: "3696"
+    uid: 7a0f8f63-2a62-47a5-a5f1-9c628f9c78b9
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: world.universe.mine
+      http:
+        paths:
+        - backend:
+            service:
+              name: europe
+              port:
+                number: 80
+          path: /europe
+          pathType: Prefix
+        - backend:
+            service:
+              name: asia
+              port:
+                number: 80
+          path: /asia
+          pathType: Prefix
+    tls:
+    - hosts:
+      - world.universe.mine
+      secretName: ingress-tls
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 172.30.1.2
+kind: List
+metadata:
+  resourceVersion: ""
+controlplane $ kubectl describe ingress -n world        
+Name:             world
+Labels:           <none>
+Namespace:        world
+Address:          172.30.1.2
+Ingress Class:    nginx
+Default backend:  <default>
+TLS:
+  ingress-tls terminates world.universe.mine
+Rules:
+  Host                 Path  Backends
+  ----                 ----  --------
+  world.universe.mine  
+                       /europe   europe:80 (192.168.0.7:80,192.168.0.8:80)
+                       /asia     asia:80 (192.168.0.6:80,192.168.0.9:80)
+Annotations:           nginx.ingress.kubernetes.io/rewrite-target: /$1
+                       nginx.ingress.kubernetes.io/ssl-redirect: false
+                       nginx.ingress.kubernetes.io/use-regex: true
+Events:
+  Type    Reason  Age                   From                      Message
+  ----    ------  ----                  ----                      -------
+  Normal  Sync    2m30s (x3 over 7m8s)  nginx-ingress-controller  Scheduled for sync
+  
+controlplane $ 
+controlplane $ kubectl get secret -n world
+NAME          TYPE                DATA   AGE
+ingress-tls   kubernetes.io/tls   2      5m51s
+controlplane $ kubectl get secret -n world -o yaml
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURXVENDQWtHZ0F3SUJBZ0lVZTByNGY0YXM1TmlUc2pEZjBod0F0bk1acUZBd0RRWUpLb1pJaHZjTkFRRUwKQlFBd1BERWNNQm9HQTFVRUF3d1RkMjl5YkdRdWRXNXBkbVZ5YzJVdWJXbHVaVEVjTUJvR0ExVUVDZ3dUZDI5eQpiR1F1ZFc1cGRtVnljMlV1YldsdVpUQWVGdzB5TlRBeE1qRXhOekV6TkRsYUZ3MHlOakF4TWpFeE56RXpORGxhCk1Ed3hIREFhQmdOVkJBTU1FM2R2Y214a0xuVnVhWFpsY25ObExtMXBibVV4SERBYUJnTlZCQW9NRTNkdmNteGsKTG5WdWFYWmxjbk5sTG0xcGJtVXdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFEawoxcDVyVE5QVDBoYnpDVEdhL2IvNjhvTSsxNFVCWWoyWGtEOThLSm5NMnoxcGNWQ0puVnN6WHU2dC84OG1qU0dnClRVNkdYcDRTNUd1clkvUnp1dmZ5QkptOEpOQURZb0paRnpjZCtVd08vM2N1VWtXb21HS0puaHNmUDNCcVowYlcKRmpJZmlFc25qS21ERjNPV1ViWGl1NkYrZTI5MDVHY3RLaDk4cndQYTJiZVVjZzVBMGs2MTRiOUliclRtdU4yWQpyRUJpSlpCN0lKRE96dzRkdFdMU2ZLcHZnRDdQOTdkTmdUSDRrWHNkZUxJVGx0ckVtUW9KM2RvSUtuUmNpSE5aCkhRL0pIK3pkandiR0szbDNmTTROelNWWGRIMnFac0N1QjNQckltVXFnOXhDOFo3KzI1OFhHWitZM2xKMm5yQ3IKRkZNNnlRdjB3eUVFS1hRZTFkZ3RBZ01CQUFHalV6QlJNQjBHQTFVZERnUVdCQlQyZ1Z0QW1yR0p3SWhjbCtvegpDb2lZRXpSanVEQWZCZ05WSFNNRUdEQVdnQlQyZ1Z0QW1yR0p3SWhjbCtvekNvaVlFelJqdURBUEJnTlZIUk1CCkFmOEVCVEFEQVFIL01BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQVNmSlpPY2wySGd2d2pjSFhzWU9XbzZka1YKejBpd29qcXhGbkcvVlptMllaUy9OSytEV0RoWmdsTm94OXFtL0dGOC9OQjRuRm1FeUpuVXU1SVl0emN1QzdaSQpMa29KZTRPVG9mMjlkakI0SFMxSlRRUTlNWWRkUGIyVi9KbWswMk1QaU1qeGc3L3FNd0NMYXByVzg0L1QzUFFXCnA2aEppYnhYQStDMkVMMmZZd2ptN1BXSFgrRVB0M1F1L0w5cEhHSDlhYU9QM1lUZkVSTHhOVUNtVDdHUncwSjQKdVBGSFBzN0tJZ0k5aElTZjJSUXRsdENUUDRJb1VzU1ZyaGFCZUJpL2M1cUVkYkEweWFwZ1dXOWJPL25YTnhOcgp2K2lJWSs1ZGV2NDVMWndPblg1UG1PQ2NwY2pQT2Z5eXlaY0tLLzROOEhwa2dqdVBaS2ZyU2NhemN3amQKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktnd2dnU2tBZ0VBQW9JQkFRRGsxcDVyVE5QVDBoYnoKQ1RHYS9iLzY4b00rMTRVQllqMlhrRDk4S0puTTJ6MXBjVkNKblZzelh1NnQvODhtalNHZ1RVNkdYcDRTNUd1cgpZL1J6dXZmeUJKbThKTkFEWW9KWkZ6Y2QrVXdPLzNjdVVrV29tR0tKbmhzZlAzQnFaMGJXRmpJZmlFc25qS21ECkYzT1dVYlhpdTZGK2UyOTA1R2N0S2g5OHJ3UGEyYmVVY2c1QTBrNjE0YjlJYnJUbXVOMllyRUJpSlpCN0lKRE8Kenc0ZHRXTFNmS3B2Z0Q3UDk3ZE5nVEg0a1hzZGVMSVRsdHJFbVFvSjNkb0lLblJjaUhOWkhRL0pIK3pkandiRwpLM2wzZk00TnpTVlhkSDJxWnNDdUIzUHJJbVVxZzl4QzhaNysyNThYR1orWTNsSjJuckNyRkZNNnlRdjB3eUVFCktYUWUxZGd0QWdNQkFBRUNnZ0VCQU1PVVdsbENsRmlaV2x2bEk2eGY2MURETEVEdFdoUFFydXQyc1l1Zjk3TUsKUGZaOGptVFBSRDhuaDc3V3Yya25mZkhQb0tsZS9LTVE3cVRSRFFCTWI5VTg4VmZIN3JDMTVNblgrWmQ0bGZUTAppa1RndEFCZ0hQZVpWWHpqYjJUQlY5MXBvdlVvTzNOVjJScmRWRURKSFRiblBpTW54QjZYaDBjbWxUcXZLaEJFCkhUMWRCa1NidDROL1EzSFE0a3JJL1F1aFV4Uk9hNWRuUTN3OGxmUnV4WmFKMWhMTHppZmordHlFekF6blFhOVAKdERIM0svRTdvWGxxTjlRdDlDdjhBOWNtZUs5YmtWNEZRa3Y3NXE5ejhVQmRkclIxS3E2RnMwbmNPNmE5L2tUZwpjdE5XVGpYeW1JOUxOeDVQL1ZzUDdtMEFxbitOZm95Z1pzTjBabDB0NG9FQ2dZRUEvMHlVcTRFN3pjY0VYemh6CkU4TXZnRTZvRVFMdEF3VGk1NGlVa01Ob2VFYno3d2pYRHZNUFVNSm9tS3NtaDFvcWE5SnVaVFB1c2Y3MG1TY0cKZDdrOVJUdFM3V0xQSWpZMlk1TGwwS0QySDlrTkFPLy9tWHQrdVhsYjhqMmtyTnRMV3ZNbW1ubFNQQlg0eXBNVQpBYWl5YWFZOHE5S25tc3lNOGhIWTN2SmtWaGtDZ1lFQTVYZHhKQklvWDZDUnhEM2pFNVdabVhPaUYwQTFSOVlpClZjUHZESWYzRGo1UWZwTVlhTGgvdmpQSXBtSm9rRkVGR0R0SzRBbFR4R21Pc3JEakF3SmxETGdtaUFVUzFNK2wKUmZuSXVsRis2RktPUmhJR3Yxakp5Q0t6ZlNGVjE3MjBGMmYrTXhvOHM1QkxSWHc1VGxLSWdjRUtFOUVhMEh5bwora0pSMnFmT3pUVUNnWUFJbWV2b1cxSklmSXdKS1QyM1RMd3M5bmx6R1VZaTgrY3hKY2pibDduTlU1YWtWd2ZuCjJRaUxFQUcySXc0SlFXQnNnWXAybm1sTVZlcW52a2paZjhRd3NPNzZVSG5xRFNtSDhVc00zRjl1YzBHYzVua1cKRXJNU1RLUnNaT2RIYTV2K1ZITFlnWDNqeUZtNWVYc1RFenZ2azBvMy84RGwxajVwYVhDRkVtV1BBUUtCZ1FEagpUSnVBVlpRMGxZT08xcGJXMFh1aks0M0daazNnNk5aK0NtWUREYlBHSWlmdUdaczJNSHdwVm5aTmluRjFjeXdPCndyejZpNEswcnJNeGdsSjhxcVNhSXRmWUtONXNlM3VGZzFZNGFYM0NkL1NDcUZ5U3NrcSt1dEQ5QkVaYVBJbm0KSFpjSjI5V0JNVSsrZHJ6MVBvQUZ0OGhadE9wUTF3c3pTdnAyRTMrZ2VRS0JnQ3JkR0xLYU1TYmx3cDF5OUpQbgpaajAvN2Yzbzk1aWs1dlpVdWtoUUdXczRwRjhzdkxialVjZEFDS2F1RzM3b1NYU2piai9ZU2I5aUJ5N294VnhxCnhqZEVDQmdyUkc3UGhFVExDU2V3a1V6Z0o1K09qeGZSQlhvaTUxUkxIVHVQYjFUcjZEdWRBdXgraEZialFJdWkKOE1YYm1LdE9FL2RRQXgxckpPVGpHQnF3Ci0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K
+  kind: Secret
+  metadata:
+    creationTimestamp: "2025-01-21T17:16:22Z"
+    name: ingress-tls
+    namespace: world
+    resourceVersion: "3566"
+    uid: 89f766a5-aae6-4edf-bf66-4b7e0c0eee2d
+  type: kubernetes.io/tls
+kind: List
+metadata:
+  resourceVersion: ""
+controlplane $ 
+controlplane $ kubectl describe secret -n world        
+Name:         ingress-tls
+Namespace:    world
+Labels:       <none>
+Annotations:  <none>
+
+Type:  kubernetes.io/tls
+
+Data
+====
+tls.crt:  1220 bytes
+tls.key:  1704 bytes
