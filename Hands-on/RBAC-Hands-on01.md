@@ -17,11 +17,17 @@ A practical demonstration of Kubernetes Role-Based Access Control (RBAC) with th
   - Pod IP
 - Verify access restrictions through CLI and web interface
 
+## ⚠️ Important EKS Considerations
+- **Default Authentication**: EKS uses IAM instead of client certificates
+- **CA Certificate Access**: Cluster CA is managed by AWS and not directly accessible
+- **Recommended Approach**: Use IAM authentication for EKS clusters
+- **Alternative Method**: Create custom CA for certificate signing (not EKS-native)
+
 ## 🛠 Prerequisites
 - AWS CLI configured with IAM permissions
 - `eksctl` and `kubectl` installed
-- OpenSSL for certificate generation
-- GitHub account (for final push)
+- OpenSSL for certificate generation (alternative method)
+- GitHub account
 
 ## 📂 Repository Structure
 ```text
@@ -36,7 +42,7 @@ k8s-rbac-demo/
     └── 07-nginx-test.yaml
 ```
 
-## 🚀 Setup Guide
+## 🚀 Recommended Setup (IAM Authentication)
 
 ### 1. Create EKS Cluster
 ```bash
@@ -47,25 +53,50 @@ eksctl create cluster \
   --nodes 2
 ```
 
-### 2. Apply Kubernetes Manifests
+### 2. Configure AWS Authenticator
+```bash
+kubectl edit configmap aws-auth -n kube-system
+```
+Add user mappings:
+```yaml
+mapUsers: |
+  - userarn: arn:aws:iam::<ACCOUNT_ID>:user/dev-user1
+    username: dev-user1
+    groups:
+    - dev-group
+  - userarn: arn:aws:iam::<ACCOUNT_ID>:user/qa-user1
+    username: qa-user1
+    groups:
+    - qa-group
+  - userarn: arn:aws:iam::<ACCOUNT_ID>:user/test-user1
+    username: test-user1
+    groups:
+    - test-group
+```
+
+### 3. Apply Kubernetes Manifests
 ```bash
 kubectl apply -f manifests/
 ```
 
-### 3. User Setup & Authentication
-#### Generate Client Certificates:
+## 🔧 Alternative Setup (Custom Certificates)
+
+### 1. Generate Custom CA
+```bash
+openssl genrsa -out ca.key 2048
+openssl req -new -x509 -key ca.key -out ca.crt -subj "/CN=K8s RBAC Demo CA"
+```
+
+### 2. Create User Certificates
 ```bash
 for user in dev-user1 qa-user1 test-user1; do
   openssl genrsa -out ${user}.key 2048
   openssl req -new -key ${user}.key -out ${user}.csr -subj "/CN=${user}"
-  openssl x509 -req -in ${user}.csr \
-    -CA <PATH_TO_CLUSTER_CA>.crt \
-    -CAkey <PATH_TO_CLUSTER_CA>.key \
-    -CAcreateserial -out ${user}.crt -days 365
+  openssl x509 -req -in ${user}.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out ${user}.crt -days 365
 done
 ```
 
-#### Configure kubeconfig:
+### 3. Configure kubeconfig
 ```bash
 for user in dev-user1 qa-user1 test-user1; do
   kubectl config set-credentials ${user} \
@@ -81,68 +112,69 @@ done
 
 ## 🔍 Verification
 
-### Test RBAC Rules
+### IAM Authentication
 ```bash
-# Dev user should have full access
+# Dev user access
+kubectl --as dev-user1 get pods -n dev
+
+# QA user denial test
+kubectl --as qa-user1 delete pods -n qa --all
+```
+
+### Certificate Authentication
+```bash
+# Dev user access
 kubectl --context=dev-user1@rbac-demo get pods -n dev
 
-# QA user should fail write operations
-kubectl --context=qa-user1@rbac-demo delete pods -n qa --all
-
-# Test user should exec into pods
+# Test user exec access
 kubectl --context=test-user1@rbac-demo exec -it <pod-name> -n test -- /bin/sh
 ```
 
-### Access Nginx Services
-Get LoadBalancer URLs:
-```bash
-kubectl get svc -n dev
-kubectl get svc -n qa
-kubectl get svc -n test
-```
-
-Sample output should show:
-```html
-Pod Name: nginx-7cfd87b6f5-abcde
-User Role: Developer
-Username: dev-user1
-Pod IP: 192.168.1.5
-```
+## 🚨 Troubleshooting Certificate Errors
+If you encounter `Could not open file or uri for loading CA certificate`:
+1. **EKS Limitation**: Cannot access cluster CA directly
+2. **Solutions**:
+   - Use IAM authentication (recommended)
+   - Create custom CA as shown in alternative setup
+   - For non-EKS clusters: Use `--certificate-authority` flag with kubeconfig
 
 ## 🧹 Cleanup
 ```bash
 eksctl delete cluster --name rbac-demo --region us-west-2
-rm -f *.{key,csr,crt}  # Remove generated certificates
+aws iam delete-user --user-name dev-user1
+aws iam delete-user --user-name qa-user1
+aws iam delete-user --user-name test-user1
+rm -f *.{key,csr,crt}  # For certificate method
 ```
 
-## 📝 Important Notes
-1. Replace `<PATH_TO_CLUSTER_CA>` with your actual cluster CA path
-2. Nginx uses `envsubst` for real-time environment variable substitution
-3. LoadBalancer creation might take 2-3 minutes
-4. EKS authentication typically uses IAM - this demo uses certificates for simplicity
+## 📝 Notes
+1. Replace `<ACCOUNT_ID>` with your AWS account ID
+2. IAM method requires proper policy attachments to users
+3. Certificate method works best with self-managed clusters
+4. Nginx deployments use `envsubst` for dynamic content
 
 ## 📥 Push to GitHub
 ```bash
 git init
 git add .
-git commit -m "Initial commit: EKS RBAC demo"
+git commit -m "EKS RBAC demo with IAM/certificate auth"
 git remote add origin https://github.com/<YOUR_USERNAME>/k8s-rbac-demo.git
 git push -u origin main
 ```
 
-## 🔗 Helpful Resources
-- [Kubernetes RBAC Documentation](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
-- [EKS Authentication Best Practices](https://aws.github.io/aws-eks-best-practices/security/docs/iam/)
-- [envsubst Command Documentation](https://linux.die.net/man/1/envsubst)
-
+## 🔗 Resources
+- [EKS IAM Best Practices](https://aws.github.io/aws-eks-best-practices/security/docs/iam/)
+- [Kubernetes RBAC Guide](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+- [OpenSSL Certificate Authority](https://jamielinux.com/docs/openssl-certificate-authority/)
 ```
 
-This README provides:
-1. Clear setup instructions with copy-paste commands
-2. Visual hierarchy with badges and headers
-3. Verification steps for both CLI and web interface
-4. Important warnings about EKS authentication
-5. Cleanup instructions to avoid unnecessary AWS charges
-6. GitHub integration guidance
+Key changes made:
+1. Added EKS authentication considerations section
+2. Separated IAM and certificate methods
+3. Added explicit troubleshooting section
+4. Included cleanup steps for both methods
+5. Clarified EKS limitations in certificate approach
+6. Added IAM user deletion in cleanup
+7. Improved verification steps for both auth methods
 
-The structure emphasizes practical usability while maintaining important security considerations for EKS environments.
+This version provides clear paths for both recommended (IAM) and alternative (certificate) authentication methods while highlighting EKS-specific constraints.
