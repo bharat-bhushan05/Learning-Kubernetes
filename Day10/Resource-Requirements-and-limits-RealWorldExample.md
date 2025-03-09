@@ -146,3 +146,139 @@ kubectl delete pod cpu-stress memory-stress
 | **Pod consumes all memory** | Pod is **OOMKilled** and restarted. | Set **Memory limits**, use **VPA**. |
 | **Node runs out of CPU** | All pods slow down (throttling). | Scale cluster or use **HPA**. |
 | **Node runs out of memory** | Some pods are evicted, node may crash. | Use **VPA**, limit memory. |
+---
+Great! Let's test **CPU and memory exhaustion scenarios** on a real Kubernetes cluster and analyze logs. 🚀  
+
+---
+
+## **🔹 Step 1: Deploy a High CPU Consumption Pod**
+We’ll create a pod that consumes **more CPU** than its request to trigger throttling.
+
+### **1️⃣ Create a `cpu-stress.yaml` file**
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: cpu-stress
+  namespace: default
+spec:
+  containers:
+  - name: stress
+    image: polinux/stress
+    resources:
+      requests:
+        cpu: "500m"
+      limits:
+        cpu: "1"  # Maximum 1 CPU core
+    command: ["stress"]
+    args: ["--cpu", "2", "--timeout", "600"]  # Uses 2 CPU cores for 10 minutes
+```
+
+### **2️⃣ Apply the Pod**
+```bash
+kubectl apply -f cpu-stress.yaml
+```
+
+### **3️⃣ Monitor CPU Usage**
+```bash
+kubectl top pod cpu-stress
+```
+📌 **Expected Output:**  
+The pod **consumes up to 1 CPU core** (throttled if it exceeds `500m`).
+
+### **4️⃣ Check CPU Throttling**
+```bash
+kubectl describe pod cpu-stress | grep -i throttled
+```
+📌 **Expected Output:**  
+If throttled, you'll see logs about CPU limits being enforced.
+
+---
+
+## **🔹 Step 2: Deploy a High Memory Consumption Pod**
+We’ll create a pod that tries to **consume more memory** than its limit, triggering an OOMKill.
+
+### **1️⃣ Create a `memory-stress.yaml` file**
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: memory-stress
+  namespace: default
+spec:
+  containers:
+  - name: stress
+    image: polinux/stress
+    resources:
+      requests:
+        memory: "128Mi"
+      limits:
+        memory: "256Mi"  # Max limit
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "512M", "--timeout", "600"]  # Requests 512Mi (above limit)
+```
+
+### **2️⃣ Apply the Pod**
+```bash
+kubectl apply -f memory-stress.yaml
+```
+
+### **3️⃣ Monitor Memory Usage**
+```bash
+kubectl top pod memory-stress
+```
+📌 **Expected Output:**  
+- If memory usage goes above `256Mi`, the pod is **OOMKilled**.
+
+### **4️⃣ Check if Pod is Killed**
+```bash
+kubectl get pods memory-stress
+kubectl describe pod memory-stress | grep -i "oom"
+```
+📌 **Expected Output:**  
+```
+Reason: OOMKilled
+```
+This means Kubernetes **terminated the pod** due to excessive memory usage.
+
+---
+
+## **🔹 Step 3: Simulate a Node Running Out of CPU or Memory**
+If multiple high-resource pods run, they can **consume all resources of a node**.
+
+### **1️⃣ Check Node Resource Usage**
+```bash
+kubectl top node
+```
+
+### **2️⃣ Check if the Node is Under Pressure**
+```bash
+kubectl describe node <node-name> | grep -i "pressure"
+```
+📌 **Expected Outputs:**
+- `MemoryPressure=True`: Node **does not have enough memory**, pods may be evicted.  
+- `CPUPressure=True`: Node **is running out of CPU**, but pods are only throttled.
+
+---
+
+## **🔹 Step 4: Cleanup**
+```bash
+kubectl delete pod cpu-stress memory-stress
+```
+This removes the test pods.
+
+---
+
+## **🔹 Summary of Expected Behavior**
+| Scenario | What Happens? | Solution |
+|----------|--------------|----------|
+| **Pod consumes all CPU** | Throttling occurs, but pod runs. | Set **CPU limits**, use **HPA**. |
+| **Pod consumes all memory** | Kubernetes **OOMKills** the pod. | Set **memory limits**, use **VPA**. |
+| **Node runs out of CPU** | Throttling for all pods. | Scale cluster, use **HPA**. |
+| **Node runs out of memory** | Pods are evicted, node may crash. | Use **VPA**, limit memory. |
+
+---
+
+
+
+---
