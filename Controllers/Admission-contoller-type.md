@@ -1,4 +1,4 @@
-Here's an in-depth explanation of **types of Kubernetes Admission Controllers**, including their purpose, behavior, and use cases:
+**Types of Kubernetes Admission Controllers**, including their purpose, behavior, and use cases:
 
 ---
 
