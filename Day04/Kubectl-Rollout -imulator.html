@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kubectl rollout Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1f2937;
+            color: #d1d5db;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 1.5rem;
+        }
+        .card {
+            background-color: #374151;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f9fafb;
+            margin-bottom: 1rem;
+        }
+        .pod-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+            min-height: 120px;
+        }
+        .pod {
+            width: 70px;
+            height: 70px;
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+            transition: all 0.5s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            opacity: 1;
+        }
+        .pod-v1 { background-color: #3b82f6; } /* Blue */
+        .pod-v2 { background-color: #10b981; } /* Green */
+        .pod-version {
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .pod-name {
+            font-size: 0.625rem;
+            font-weight: normal;
+            opacity: 0.8;
+            word-break: break-all;
+        }
+        .terminal-input {
+            width: 100%;
+            background-color: #111827;
+            border: 1px solid #4b5563;
+            color: #d1d5db;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            outline: none;
+            font-family: monospace;
+        }
+        .terminal-output {
+            background-color: #111827;
+            border: 1px solid #4b5563;
+            color: #9ca3af;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            min-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin-top: 1rem;
+        }
+        .terminal-output span {
+            color: #e5e7eb;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-green {
+            background-color: #10b981;
+        }
+        .btn-green:hover {
+            background-color: #059669;
+        }
+        .instructions {
+            background-color: #1e3a8a;
+            color: #dbeafe;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-bottom: 2rem;
+        }
+        .instructions h3 {
+            font-weight: bold;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .instructions ol {
+            list-style-type: decimal;
+            list-style-position: inside;
+        }
+        .instructions li {
+            margin-bottom: 0.5rem;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="text-center py-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-100">
+            `kubectl rollout` Simulator
+        </h1>
+        <p class="mt-2 text-lg text-gray-400">
+            A hands-on environment to understand Kubernetes deployments.
+        </p>
+    </header>
+
+    <div class="instructions">
+        <h3>How to Use This Simulator</h3>
+        <p>This is a simulated Kubernetes environment. To begin, use the commands below in the terminal.</p>
+        <ol class="mt-2">
+            <li>**Start a Deployment:** Type `kubectl apply -f deployment-v1.yaml` and press Enter. You will see pods appear below.</li>
+            <li>**Update the Deployment:** Type `kubectl apply -f deployment-v2.yaml` to initiate a rolling update. Watch the pods change.</li>
+            <li>**Check Status:** Use `kubectl rollout status deployment/my-app` to monitor the update.</li>
+            <li>**View History:** Use `kubectl rollout history deployment/my-app` to see the revision log.</li>
+            <li>**Rollback:** Use `kubectl rollout undo deployment/my-app` to revert to the previous version.</li>
+            <li>**Pause/Resume:** Try `kubectl rollout pause` during an update, then `kubectl rollout resume`.</li>
+        </ol>
+        <p class="mt-4">You can use the buttons to quickly paste commands.</p>
+    </div>
+
+    <div class="card">
+        <div class="title">Kubernetes Dashboard (Pods)</div>
+        <div id="pod-container" class="pod-container">
+            <!-- Pods will be rendered here -->
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="title">Terminal</div>
+        <div class="flex flex-col sm:flex-row gap-2 mb-4">
+            <button class="btn btn-green flex-1" onclick="pasteCommand('kubectl apply -f deployment-v1.yaml')">Deploy v1</button>
+            <button class="btn btn-green flex-1" onclick="pasteCommand('kubectl apply -f deployment-v2.yaml')">Update to v2</button>
+            <button class="btn btn-green flex-1" onclick="pasteCommand('kubectl rollout status deployment/my-app')">Rollout Status</button>
+            <button class="btn btn-green flex-1" onclick="pasteCommand('kubectl rollout history deployment/my-app')">Rollout History</button>
+            <button class="btn btn-green flex-1" onclick="pasteCommand('kubectl rollout undo deployment/my-app')">Rollback</button>
+        </div>
+        <input type="text" id="terminal-input" class="terminal-input" placeholder="> Type a command and press Enter..." autofocus>
+        <div id="terminal-output" class="terminal-output">
+            Welcome to the `kubectl rollout` Simulator.
+        </div>
+    </div>
+</div>
+
+<script>
+    const podContainer = document.getElementById('pod-container');
+    const terminalInput = document.getElementById('terminal-input');
+    const terminalOutput = document.getElementById('terminal-output');
+
+    let pods = [];
+    let history = [];
+    let currentRevision = 0;
+    let isRolloutInProgress = false;
+    let isRolloutPaused = false;
+    let rolloutInterval;
+
+    function log(message, color = '#e5e7eb') {
+        const span = document.createElement('span');
+        span.style.color = color;
+        span.textContent = '> ' + message;
+        terminalOutput.appendChild(span);
+        terminalOutput.appendChild(document.createElement('br'));
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+
+    function renderPods() {
+        podContainer.innerHTML = '';
+        pods.forEach(pod => {
+            const podElement = document.createElement('div');
+            podElement.className = `pod pod-v${pod.version} animate-fade-in`;
+            podElement.innerHTML = `<span class="pod-version">v${pod.version}</span><span class="pod-name">${pod.name.substring(0, 10)}...</span>`;
+            podContainer.appendChild(podElement);
+        });
+    }
+
+    function startRollout(newVersion) {
+        if (isRolloutInProgress) {
+            log('Error: A rollout is already in progress.', 'red');
+            return;
+        }
+
+        isRolloutInProgress = true;
+        isRolloutPaused = false;
+        
+        const oldVersion = newVersion === 2 ? 1 : 2;
+        const currentPods = pods.filter(p => p.version === oldVersion);
+        
+        let podsToReplace = [...currentPods];
+        let podsCreated = 0;
+
+        log(`Starting rollout of deployment/my-app.`, 'green');
+        log(`Current pods: ${pods.length}, New version: v${newVersion}`);
+
+        rolloutInterval = setInterval(() => {
+            if (isRolloutPaused) {
+                return;
+            }
+
+            if (podsToReplace.length > 0) {
+                const podToReplace = podsToReplace.shift();
+                pods = pods.filter(p => p.name !== podToReplace.name);
+                log(`- Terminating pod ${podToReplace.name} (v${podToReplace.version})`);
+            }
+            
+            if (podsCreated < 4) {
+                const newPod = { name: crypto.randomUUID(), version: newVersion, status: 'running' };
+                pods.push(newPod);
+                podsCreated++;
+                log(`- Creating pod ${newPod.name} (v${newVersion})`);
+            }
+
+            renderPods();
+
+            if (podsToReplace.length === 0 && podsCreated === 4) {
+                clearInterval(rolloutInterval);
+                isRolloutInProgress = false;
+                currentRevision++;
+                log(`Deployment successfully rolled out. All pods are now v${newVersion}.`, 'green');
+                history.push({
+                    revision: currentRevision,
+                    version: newVersion,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+            }
+        }, 1000);
+    }
+
+    function handleCommand(command) {
+        command = command.trim();
+        log(command);
+
+        if (command.startsWith('kubectl apply -f')) {
+            if (command.includes('deployment-v1.yaml')) {
+                pods = [];
+                for (let i = 0; i < 4; i++) {
+                    pods.push({ name: crypto.randomUUID(), version: 1, status: 'running' });
+                }
+                renderPods();
+                currentRevision = 1;
+                history = [{ revision: 1, version: 1, timestamp: new Date().toLocaleTimeString() }];
+                log('deployment.apps/my-app created', 'green');
+            } else if (command.includes('deployment-v2.yaml')) {
+                if (currentRevision === 0) {
+                    log('Error: A deployment must be created first. Use `kubectl apply -f deployment-v1.yaml`', 'red');
+                    return;
+                }
+                startRollout(2);
+            }
+        } else if (command === 'kubectl get pods') {
+            log('Listing pods...');
+            pods.forEach(pod => {
+                log(`pod/${pod.name}  -  v${pod.version}  -  Running`, 'gray');
+            });
+        } else if (command === 'kubectl get deployment') {
+            log('NAME      READY   UP-TO-DATE   AVAILABLE   AGE', 'gray');
+            log(`my-app    ${pods.length}/4     ${pods.filter(p => p.version === 2).length}            ${pods.length}          0s`, 'gray');
+        } else if (command === 'kubectl rollout status deployment/my-app') {
+            if (!isRolloutInProgress) {
+                log('deployment "my-app" successfully rolled out');
+            } else if (isRolloutPaused) {
+                 log('deployment "my-app" is paused');
+            }
+            else {
+                const readyPods = pods.filter(p => p.status === 'running').length;
+                const newPods = pods.filter(p => p.version === (currentRevision + 1)).length;
+                log(`Waiting for deployment "my-app" rollout to finish: ${readyPods} of 4 updated replicas are available...`);
+            }
+        } else if (command.startsWith('kubectl rollout history')) {
+            log('deployment.apps/my-app');
+            log('REVISION  CHANGE-CAUSE');
+            history.forEach(rev => {
+                log(`${rev.revision}         <none> (v${rev.version})`);
+            });
+        } else if (command.startsWith('kubectl rollout undo')) {
+            const lastVersion = history.length > 1 ? history[history.length - 2].version : 1;
+            startRollout(lastVersion);
+        } else if (command === 'kubectl rollout pause deployment/my-app') {
+            if (isRolloutInProgress) {
+                isRolloutPaused = true;
+                log('deployment.apps/my-app paused');
+            } else {
+                log('Error: No active rollout to pause.', 'red');
+            }
+        } else if (command === 'kubectl rollout resume deployment/my-app') {
+            if (isRolloutInProgress && isRolloutPaused) {
+                isRolloutPaused = false;
+                log('deployment.apps/my-app resumed');
+            } else {
+                log('Error: No paused rollout to resume.', 'red');
+            }
+        } else {
+            log(`Error: unknown command "${command}"`, 'red');
+        }
+    }
+
+    terminalInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const command = terminalInput.value;
+            terminalInput.value = '';
+            handleCommand(command);
+        }
+    });
+
+    function pasteCommand(command) {
+        terminalInput.value = command;
+        terminalInput.focus();
+    }
+</script>
+
+</body>
+</html>
