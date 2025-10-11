@@ -204,7 +204,7 @@ Conditions:
   MemoryPressure   False   Sat, 11 Oct 2025 04:45:22 +0000   Sat, 11 Oct 2025 04:34:36 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
   DiskPressure     False   Sat, 11 Oct 2025 04:45:22 +0000   Sat, 11 Oct 2025 04:34:36 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
   PIDPressure      False   Sat, 11 Oct 2025 04:45:22 +0000   Sat, 11 Oct 2025 04:34:36 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
-  Ready            False   Sat, 11 Oct 2025 04:45:22 +0000   Sat, 11 Oct 2025 04:34:36 +0000   KubeletNotReady              container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized
+**  Ready            False   Sat, 11 Oct 2025 04:45:22 +0000   Sat, 11 Oct 2025 04:34:36 +0000   KubeletNotReady              container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized**
 Addresses:
   InternalIP:  172.31.16.177
   Hostname:    ip-172-31-16-177
