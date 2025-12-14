@@ -187,15 +187,15 @@ Expected results:
 
 This lab simulates **real production RBAC** in a constrained environment like KodeKloud, preparing you for:
 
-## Outputs:
+##  :orange_book: Outputs:
 
-### Verify Cluster Access and create  Namespaces dev, qa & prod
+### :orange_book: Verify Cluster Access and create  Namespaces dev, qa & prod
 <img width="1181" height="385" alt="image" src="https://github.com/user-attachments/assets/9d325579-e055-41f5-b4aa-83c209410946" />
 
-### Create Users (Certificate Based) for dev, qa and prod user
+### :orange_book: Create Users (Certificate Based) for dev, qa and prod user
 <img width="984" height="1180" alt="image" src="https://github.com/user-attachments/assets/2610cfae-8145-4cd9-bf5e-4c0683e9c69a" />
 
-### Created role and role-binding for each user
+### :orange_book: Created role and role-binding for each user
 <img width="762" height="374" alt="image" src="https://github.com/user-attachments/assets/a58342f5-5ac0-405d-aaa1-9fdb722942e3" />
 
 ### Deployed role and role-binding
