@@ -187,39 +187,39 @@ Expected results:
 
 This lab simulates **real production RBAC** in a constrained environment like KodeKloud, preparing you for:
 
-##  :orange_book: Outputs:
+##  :arrow_right: Outputs:
 
-### :orange_book: Verify Cluster Access and create  Namespaces dev, qa & prod
+### :arrow_right: Verify Cluster Access and create  Namespaces dev, qa & prod
 <img width="1181" height="385" alt="image" src="https://github.com/user-attachments/assets/9d325579-e055-41f5-b4aa-83c209410946" />
 
-### :orange_book: Create Users (Certificate Based) for dev, qa and prod user
+### :arrow_right: Create Users (Certificate Based) for dev, qa and prod user
 <img width="984" height="1180" alt="image" src="https://github.com/user-attachments/assets/2610cfae-8145-4cd9-bf5e-4c0683e9c69a" />
 
-### :orange_book: Created role and role-binding for each user
+### :arrow_right: Created role and role-binding for each user
 <img width="762" height="374" alt="image" src="https://github.com/user-attachments/assets/a58342f5-5ac0-405d-aaa1-9fdb722942e3" />
 
-### Deployed role and role-binding
+### :arrow_right: Deployed role and role-binding
 <img width="1181" height="208" alt="image" src="https://github.com/user-attachments/assets/d76e67e1-2299-40cd-9c04-2edb0521b703" />
 
-### Create User-Specific kubeconfig Files ( dev-user kubeconfig)
+### :arrow_right: Create User-Specific kubeconfig Files ( dev-user kubeconfig)
 <img width="1181" height="876" alt="image" src="https://github.com/user-attachments/assets/7c8645f5-9668-476a-8f8c-c6f068ff8261" />
 
-### Create User-Specific kubeconfig Files ( qa-user kubeconfig)
+### :arrow_right: Create User-Specific kubeconfig Files ( qa-user kubeconfig)
 <img width="1181" height="509" alt="image" src="https://github.com/user-attachments/assets/76a64e74-0d4d-4138-ac10-5afce4ce1d9f" />
 
-### Create User-Specific kubeconfig Files ( prod-user kubeconfig)
+### :arrow_right: Create User-Specific kubeconfig Files ( prod-user kubeconfig)
 <img width="1181" height="438" alt="image" src="https://github.com/user-attachments/assets/6ac7abbc-04a5-4f8e-9935-4f8ffec2d788" />
 
-### Validation (dev user)
+### :arrow_right: Validation (dev user)
 <img width="1181" height="149" alt="image" src="https://github.com/user-attachments/assets/9401d696-65fd-4e15-8aaa-00ad0955333f" />
 
-### Validation (qa user)
+### :arrow_right: Validation (qa user)
 <img width="1181" height="107" alt="image" src="https://github.com/user-attachments/assets/707b9471-66ca-44ce-a14a-1c00fb710df2" />
 
-### Validation (prod user)
+### :arrow_right: Validation (prod user)
 <img width="1181" height="115" alt="image" src="https://github.com/user-attachments/assets/72c9b8ae-8641-46e5-9c1a-22e75aa77b07" />
 
-### Extra check
+### :arrow_right: Extra check
 <img width="1181" height="88" alt="image" src="https://github.com/user-attachments/assets/85f3545e-3841-4121-94e2-8bfa40837552" />
 
 
