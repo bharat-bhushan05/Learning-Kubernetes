@@ -56,19 +56,28 @@ Kubernetes Cluster (kubeadm)
 
 ```
 rbac-lab/
-├── dev/
-│   ├── dev.key
+├── dev
+│   ├── dev-binding.yaml
+│   ├── dev-role.yaml
+│   ├── dev.conf
 │   ├── dev.crt
-│   └── dev.conf
-├── qa/
-│   ├── qa.key
-│   ├── qa.crt
-│   └── qa.conf
-├── prod/
-│   ├── prod.key
+│   ├── dev.csr
+│   └── dev.key
+├── prod
+│   ├── prod-binding.yaml
+│   ├── prod-role.yaml
+│   ├── prod.conf
 │   ├── prod.crt
-│   └── prod.conf
-└── roles-bindings/
+│   ├── prod.csr
+│   └── prod.key
+└── qa
+    ├── qa-binding.yaml
+    ├── qa-role.yaml
+    ├── qa.conf
+    ├── qa.crt
+    ├── qa.csr
+    └── qa.key
+
 ```
 
 ---
